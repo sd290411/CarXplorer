@@ -1,0 +1,1119 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Car Explorer</title>
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-alt: #0b1020;
+      --accent: #7c3aed;
+      --accent-soft: rgba(124, 58, 237, 0.2);
+      --accent-strong: rgba(124, 58, 237, 0.65);
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --error: #f97373;
+      --glass: rgba(15, 23, 42, 0.85);
+      --border: rgba(148, 163, 184, 0.25);
+      --radius-lg: 18px;
+      --radius-xl: 26px;
+      --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.85);
+      --shadow-pill: 0 10px 30px rgba(15, 23, 42, 0.6);
+      --transition-fast: 160ms ease-out;
+      --transition-med: 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1f2937 0, transparent 55%),
+                  radial-gradient(circle at 20% 80%, #4c1d95 0, transparent 55%),
+                  radial-gradient(circle at 80% 80%, #0f766e 0, transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 1120px;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.96));
+      border-radius: 32px;
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      box-shadow: 0 32px 80px rgba(15, 23, 42, 0.9);
+      overflow: hidden;
+      position: relative;
+      backdrop-filter: blur(26px);
+    }
+
+    .app-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.14), transparent 56%),
+                  radial-gradient(circle at 100% 0%, rgba(129, 140, 248, 0.16), transparent 55%);
+      mix-blend-mode: screen;
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .app-inner {
+      position: relative;
+      z-index: 1;
+      padding: 24px 24px 22px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 0, #e5e7eb 0, #6366f1 32%, #4c1d95 70%);
+      box-shadow: 0 12px 26px rgba(31, 41, 55, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-logo::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 0 0, rgba(248, 250, 252, 0.65), transparent 50%);
+      opacity: 0.7;
+    }
+
+    .brand-logo span {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: rgba(15, 23, 42, 0.95);
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand-meta h1 {
+      font-size: 20px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .brand-meta p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .chip {
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: radial-gradient(circle at 0 0, rgba(148, 163, 184, 0.14), transparent 60%);
+    }
+
+    .chip-pill {
+      border-radius: 999px;
+      padding: 4px;
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.8);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.1fr);
+      gap: 18px;
+    }
+
+    @media (max-width: 860px) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .search-panel {
+      background: radial-gradient(circle at 0 0, rgba(148, 163, 184, 0.24), transparent 62%),
+                  radial-gradient(circle at 100% 100%, rgba(37, 99, 235, 0.22), transparent 55%),
+                  rgba(15, 23, 42, 0.94);
+      border-radius: 24px;
+      padding: 18px 18px 16px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      box-shadow: var(--shadow-soft);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .search-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(220, 252, 231, 0.04), rgba(248, 250, 252, 0.08));
+      mix-blend-mode: overlay;
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .search-panel-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .headline-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .headline-text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+    }
+
+    .headline-text h2 {
+      font-size: 22px;
+      letter-spacing: 0.04em;
+    }
+
+    .pulse-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      box-shadow: var(--shadow-pill);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); }
+      70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    .pulse-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+    }
+
+    .search-shell {
+      margin-top: 8px;
+      background: radial-gradient(circle at 100% 0, rgba(59, 130, 246, 0.2), transparent 50%),
+                  rgba(15, 23, 42, 0.92);
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.65);
+      padding: 9px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-pill);
+    }
+
+    .search-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 0 0, rgba(248, 250, 252, 0.18), transparent 55%);
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .search-input-wrap {
+      position: relative;
+      flex: 1;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 15px;
+      padding: 6px 4px 4px;
+    }
+
+    input::placeholder {
+      color: rgba(148, 163, 184, 0.8);
+    }
+
+    .helper-hint {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: rgba(148, 163, 184, 0.8);
+      background: rgba(15, 23, 42, 0.98);
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+    }
+
+    .primary-btn {
+      border-radius: 999px;
+      border: none;
+      padding: 9px 16px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 15px 35px rgba(55, 48, 163, 0.7);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .primary-btn::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(248, 250, 252, 0.32), transparent 58%);
+      mix-blend-mode: screen;
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .primary-btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 18px 42px rgba(55, 48, 163, 0.85);
+    }
+
+    .primary-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 10px 24px rgba(55, 48, 163, 0.7);
+    }
+
+    .search-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      gap: 8px;
+    }
+
+    .meta-pill {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+    }
+
+    .pill-accent {
+      color: #a5b4fc;
+    }
+
+    .counter-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.98);
+      border: 1px solid rgba(148, 163, 184, 0.75);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .dot-badge {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #a855f7;
+    }
+
+    .quick-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .quick-pill {
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      color: rgba(148, 163, 184, 0.96);
+      background: rgba(15, 23, 42, 0.96);
+      cursor: pointer;
+      transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .quick-pill:hover {
+      background: rgba(79, 70, 229, 0.28);
+      border-color: rgba(129, 140, 248, 0.9);
+      color: var(--text);
+    }
+
+    .result-panel {
+      border-radius: 24px;
+      padding: 18px 18px 16px;
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.96)),
+                  radial-gradient(circle at 0 100%, rgba(129, 140, 248, 0.16), transparent 62%);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .result-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 100% 0, rgba(56, 189, 248, 0.12), transparent 55%);
+      mix-blend-mode: screen;
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .result-panel-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .result-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .result-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: rgba(148, 163, 184, 0.9);
+    }
+
+    .result-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: rgba(148, 163, 184, 0.9);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(248, 250, 252, 0.9);
+    }
+
+    .car-name-wrap {
+      margin-top: 4px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .car-name {
+      font-size: 22px;
+      letter-spacing: 0.04em;
+    }
+
+    .car-subtitle {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .tag-list {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 11px;
+      border: 1px solid rgba(148, 163, 184, 0.65);
+      color: rgba(148, 163, 184, 0.96);
+      background: rgba(15, 23, 42, 0.96);
+    }
+
+    .tag-strong {
+      border-color: rgba(129, 140, 248, 0.95);
+      color: #e5e7eb;
+      background: radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.2), transparent 55%);
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 480px) {
+      .metric-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .metric-card {
+      border-radius: 16px;
+      padding: 10px 11px 9px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.22), transparent 60%);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .metric-label {
+      position: relative;
+      z-index: 1;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: rgba(148, 163, 184, 0.98);
+    }
+
+    .metric-value-row {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 7px;
+      gap: 6px;
+    }
+
+    .metric-value {
+      font-size: 19px;
+    }
+
+    .metric-unit {
+      font-size: 12px;
+      color: var(--muted);
+      margin-left: 4px;
+    }
+
+    .metric-chip {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #a5b4fc;
+    }
+
+    .glass-bar {
+      position: relative;
+      z-index: 1;
+      margin-top: 8px;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      overflow: hidden;
+    }
+
+    .glass-bar-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, rgba(129, 140, 248, 0.4), rgba(248, 250, 252, 0.9));
+      transform-origin: left;
+      transform: scaleX(0.5);
+      transition: transform var(--transition-med);
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .meta-item {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: rgba(148, 163, 184, 0.96);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .meta-item span:last-child {
+      color: #e5e7eb;
+    }
+
+    .hint-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      gap: 8px;
+      font-size: 11px;
+      color: rgba(148, 163, 184, 0.96);
+    }
+
+    .hint-row span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hint-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.95);
+    }
+
+    .badge-soft {
+      border-radius: 999px;
+      padding: 3px 8px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.98);
+      color: rgba(148, 163, 184, 0.96);
+    }
+
+    .error-text {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--error);
+      min-height: 16px;
+    }
+
+    .fade-in {
+      animation: fadeInUp 260ms var(--transition-med);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div class="app-inner">
+      <header>
+        <div class="brand">
+          <div class="brand-logo"><span>CX</span></div>
+          <div class="brand-meta">
+            <h1>Car Explorer</h1>
+            <p>Type any car. Get instant, simulated specs.</p>
+          </div>
+        </div>
+        <div class="chip-row">
+          <div class="chip">
+            <span class="chip-pill"></span>
+            <span>Realtime mock data engine</span>
+          </div>
+          <div class="chip">
+            <span class="chip-pill"></span>
+            <span>Body & engine insight</span>
+          </div>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="search-panel">
+          <div class="search-panel-inner">
+            <div class="headline-row">
+              <div class="headline-text">
+                <div class="eyebrow">Search anything on wheels</div>
+                <h2>Find a car, see its story.</h2>
+              </div>
+              <div class="pulse-indicator">
+                <div class="pulse-dot"></div>
+                <span class="pulse-label">Generator live</span>
+              </div>
+            </div>
+
+            <div class="search-shell">
+              <div class="search-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="6"></circle>
+                  <line x1="16" y1="16" x2="21" y2="21"></line>
+                </svg>
+              </div>
+              <div class="search-input-wrap">
+                <input id="car-input" type="text" placeholder="Type a car name, brand, or even a vibe (e.g. 'electric SUV')" autocomplete="off" />
+                <span class="helper-hint">Enter ↵</span>
+              </div>
+              <button class="primary-btn" id="search-btn">
+                <span>Generate</span>
+                <span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14"></path>
+                    <path d="M13 5l7 7-7 7"></path>
+                  </svg>
+                </span>
+              </button>
+            </div>
+
+            <div class="search-meta-row">
+              <div class="meta-pill">
+                Randomized each search, tuned for <span class="pill-accent">HP · price · engine · body</span>
+              </div>
+              <div class="counter-badge">
+                <span class="dot-badge"></span>
+                <span id="search-count">0</span><span>x generated</span>
+              </div>
+            </div>
+
+            <div class="quick-row" aria-label="Quick car suggestions">
+              <button class="quick-pill" data-car="Tesla Model 3">Tesla Model 3</button>
+              <button class="quick-pill" data-car="Toyota Fortuner">Toyota Fortuner</button>
+              <button class="quick-pill" data-car="Hyundai i20">Hyundai i20</button>
+              <button class="quick-pill" data-car="BMW X5">BMW X5</button>
+              <button class="quick-pill" data-car="Mahindra Thar">Mahindra Thar</button>
+            </div>
+
+            <div id="error" class="error-text" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <section class="result-panel">
+          <div class="result-panel-inner" id="result-root">
+            <div class="result-header-row">
+              <div>
+                <div class="result-title">Generated profile</div>
+                <div class="car-name-wrap">
+                  <div class="car-name" id="car-name">Waiting for your search</div>
+                  <div class="car-subtitle" id="car-tagline">Type a name to generate a unique spec sheet.</div>
+                </div>
+              </div>
+              <div class="result-status" id="status-chip">
+                <span class="status-dot"></span>
+                <span>Idle</span>
+              </div>
+            </div>
+
+            <div class="tag-list" id="tag-list">
+              <span class="tag">No data yet</span>
+            </div>
+
+            <div class="metric-grid" id="metric-grid" aria-hidden="true">
+              <article class="metric-card">
+                <div class="metric-label">Horsepower</div>
+                <div class="metric-value-row">
+                  <div>
+                    <span class="metric-value" id="hp-value">–</span>
+                    <span class="metric-unit">hp</span>
+                  </div>
+                  <span class="metric-chip" id="hp-chip"></span>
+                </div>
+                <div class="glass-bar"><div class="glass-bar-fill" id="hp-bar"></div></div>
+              </article>
+
+              <article class="metric-card">
+                <div class="metric-label">Price band</div>
+                <div class="metric-value-row">
+                  <div>
+                    <span class="metric-value" id="price-value">–</span>
+                    <span class="metric-unit">(est.)</span>
+                  </div>
+                  <span class="metric-chip" id="price-chip"></span>
+                </div>
+                <div class="glass-bar"><div class="glass-bar-fill" id="price-bar"></div></div>
+              </article>
+
+              <article class="metric-card">
+                <div class="metric-label">Engine</div>
+                <div class="metric-value-row">
+                  <div>
+                    <span class="metric-value" id="engine-value">–</span>
+                  </div>
+                  <span class="metric-chip" id="engine-chip"></span>
+                </div>
+                <div class="glass-bar"><div class="glass-bar-fill" id="engine-bar"></div></div>
+              </article>
+
+              <article class="metric-card">
+                <div class="metric-label">Body type</div>
+                <div class="metric-value-row">
+                  <div>
+                    <span class="metric-value" id="body-value">–</span>
+                  </div>
+                  <span class="metric-chip" id="body-chip"></span>
+                </div>
+                <div class="glass-bar"><div class="glass-bar-fill" id="body-bar"></div></div>
+              </article>
+            </div>
+
+            <div class="meta-grid" id="meta-grid" aria-hidden="true">
+              <div class="meta-item">
+                <span>Random seed</span>
+                <span id="seed-value">–</span>
+              </div>
+              <div class="meta-item">
+                <span>Dataset region</span>
+                <span id="region-value">–</span>
+              </div>
+            </div>
+
+            
+           
+              <span class="badge-soft" id="badge-soft"></span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('car-input');
+    const searchBtn = document.getElementById('search-btn');
+    const errorEl = document.getElementById('error');
+    const searchCountEl = document.getElementById('search-count');
+
+    const carNameEl = document.getElementById('car-name');
+    const carTaglineEl = document.getElementById('car-tagline');
+    const tagListEl = document.getElementById('tag-list');
+    const metricGridEl = document.getElementById('metric-grid');
+    const metaGridEl = document.getElementById('meta-grid');
+    const hintRowEl = document.getElementById('hint-row');
+    const statusChipEl = document.getElementById('status-chip');
+
+    const hpValueEl = document.getElementById('hp-value');
+    const hpChipEl = document.getElementById('hp-chip');
+    const hpBarEl = document.getElementById('hp-bar');
+
+    const priceValueEl = document.getElementById('price-value');
+    const priceChipEl = document.getElementById('price-chip');
+    const priceBarEl = document.getElementById('price-bar');
+
+    const engineValueEl = document.getElementById('engine-value');
+    const engineChipEl = document.getElementById('engine-chip');
+    const engineBarEl = document.getElementById('engine-bar');
+
+    const bodyValueEl = document.getElementById('body-value');
+    const bodyChipEl = document.getElementById('body-chip');
+    const bodyBarEl = document.getElementById('body-bar');
+
+    const seedValueEl = document.getElementById('seed-value');
+    const regionValueEl = document.getElementById('region-value');
+    const badgeSoftEl = document.getElementById('badge-soft');
+
+    const quickPills = document.querySelectorAll('.quick-pill');
+
+    let searchCount = 0;
+
+    function pseudoRandom(seed) {
+      let x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    }
+
+    function stringToSeed(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+      }
+      hash = Math.abs(hash);
+      const jitter = Math.floor(Math.random() * 9999);
+      return hash ^ jitter;
+    }
+
+    const bodyTypes = ['Compact hatchback', 'Sedan', 'Crossover SUV', 'Full-size SUV', 'Pickup truck', 'Coupe', 'Sportscar', 'Luxury sedan', 'Electric crossover', 'MPV / People mover'];
+
+    const engineFamilies = [
+      '1.2L NA petrol',
+      '1.5L turbo petrol',
+      '2.0L turbo petrol',
+      '1.5L turbo diesel',
+      '2.2L diesel',
+      '3.0L V6 petrol',
+      'Dual-motor electric',
+      'Single-motor electric',
+      'Plug-in hybrid 1.6L',
+      'Mild-hybrid 2.0L petrol'
+    ];
+
+    const regions = ['India focus', 'EU mix', 'US highways', 'Global blend', 'City cycle', 'Mixed terrain'];
+
+    function describeHp(hp) {
+      if (hp < 110) return 'city-friendly';
+      if (hp < 160) return 'balanced daily';
+      if (hp < 230) return 'quick on demand';
+      if (hp < 320) return 'seriously brisk';
+      return 'track-teasing';
+    }
+
+    function describePrice(priceLakh) {
+      if (priceLakh < 8) return 'budget focused';
+      if (priceLakh < 15) return 'value sweet spot';
+      if (priceLakh < 30) return 'premium mainstream';
+      if (priceLakh < 60) return 'luxury bracket';
+      return 'halo car territory';
+    }
+
+    function engineTag(engineLabel) {
+      if (engineLabel.includes('electric')) return 'Zero tailpipe emissions';
+      if (engineLabel.includes('diesel')) return 'Long range highway mile-eater';
+      if (engineLabel.includes('hybrid')) return 'Efficiency-first powertrain';
+      if (engineLabel.includes('V6')) return 'Smooth higher-cylinder feel';
+      return 'Everyday petrol refinement';
+    }
+
+    function bodyTag(bodyLabel) {
+      if (bodyLabel.includes('SUV')) return 'High stance, good visibility';
+      if (bodyLabel.includes('hatchback')) return 'Compact, easy to park';
+      if (bodyLabel.includes('Coupe') || bodyLabel.includes('Sportscar')) return 'Driver-centric, low-slung stance';
+      if (bodyLabel.includes('Pickup')) return 'Utility and practicality first';
+      if (bodyLabel.includes('MPV')) return 'People and luggage friendly';
+      return 'Balanced everyday proportions';
+    }
+
+    function generateCarProfile(name) {
+      const trimmed = name.trim();
+      if (!trimmed) return null;
+
+      const seed = stringToSeed(trimmed + Date.now());
+      const r1 = pseudoRandom(seed);
+      const r2 = pseudoRandom(seed + 11);
+      const r3 = pseudoRandom(seed + 23);
+      const r4 = pseudoRandom(seed + 37);
+      const r5 = pseudoRandom(seed + 51);
+
+      const hp = Math.round(70 + r1 * 330);
+      const priceLakh = (4 + r2 * 66).toFixed(1);
+      const engine = engineFamilies[Math.floor(r3 * engineFamilies.length)];
+      const body = bodyTypes[Math.floor(r4 * bodyTypes.length)];
+      const region = regions[Math.floor(r5 * regions.length)];
+
+      const hpLevel = (hp - 70) / 330;
+      const priceLevel = (priceLakh - 4) / 66;
+      const engineLevel = engine.includes('electric') || engine.includes('hybrid') ? 0.9 : engine.includes('diesel') ? 0.7 : 0.6;
+      const bodyLevel = body.includes('SUV') || body.includes('Pickup') ? 0.75 : 0.5;
+
+      return {
+        seed,
+        name: trimmed,
+        tagline: `Simulated profile generated at ${new Date().toLocaleTimeString()}`,
+        hp,
+        priceLakh,
+        engine,
+        body,
+        region,
+        hpChip: describeHp(hp),
+        priceChip: describePrice(parseFloat(priceLakh)),
+        engineChip: engineTag(engine),
+        bodyChip: bodyTag(body),
+        hpLevel,
+        priceLevel,
+        engineLevel,
+        bodyLevel
+      };
+    }
+
+    function clearError() {
+      errorEl.textContent = '';
+    }
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+    }
+
+    function setStatus(status) {
+      const span = statusChipEl.querySelector('span:last-child');
+      if (span) span.textContent = status;
+    }
+
+    function animateFill(el, level) {
+      requestAnimationFrame(() => {
+        el.style.transform = `scaleX(${Math.max(0.12, Math.min(1, level))})`;
+      });
+    }
+
+    function renderProfile(profile) {
+      if (!profile) return;
+
+      carNameEl.textContent = profile.name;
+      carTaglineEl.textContent = profile.tagline;
+
+      tagListEl.innerHTML = '';
+      const tags = [
+        `${profile.hp} hp`,
+        `₹${profile.priceLakh}L est.`,
+        profile.engine,
+        profile.body,
+        profile.region
+      ];
+
+      tags.forEach((t, idx) => {
+        const span = document.createElement('span');
+        span.className = 'tag' + (idx < 2 ? ' tag-strong' : '');
+        span.textContent = t;
+        tagListEl.appendChild(span);
+      });
+
+      hpValueEl.textContent = profile.hp;
+      hpChipEl.textContent = profile.hpChip;
+      animateFill(hpBarEl, profile.hpLevel);
+
+      priceValueEl.textContent = `₹${profile.priceLakh} Lakh`;
+      priceChipEl.textContent = profile.priceChip;
+      animateFill(priceBarEl, profile.priceLevel);
+
+      engineValueEl.textContent = profile.engine;
+      engineChipEl.textContent = profile.engineChip;
+      animateFill(engineBarEl, profile.engineLevel);
+
+      bodyValueEl.textContent = profile.body;
+      bodyChipEl.textContent = profile.bodyChip;
+      animateFill(bodyBarEl, profile.bodyLevel);
+
+      seedValueEl.textContent = profile.seed;
+      regionValueEl.textContent = profile.region;
+
+      metricGridEl.removeAttribute('aria-hidden');
+      metaGridEl.removeAttribute('aria-hidden');
+      hintRowEl.removeAttribute('aria-hidden');
+
+      const root = document.getElementById('result-root');
+      root.classList.remove('fade-in');
+      void root.offsetWidth;
+      root.classList.add('fade-in');
+    }
+
+    function handleSearch() {
+      clearError();
+      const value = input.value.trim();
+      if (!value) {
+        showError('Type at least one character to generate specs.');
+        return;
+      }
+
+      setStatus('Generating');
+      badgeSoftEl.textContent = 'Randomized for UI exploration';
+
+      const profile = generateCarProfile(value);
+      setTimeout(() => {
+        renderProfile(profile);
+        setStatus('Generated');
+        searchCount++;
+        searchCountEl.textContent = searchCount;
+        badgeSoftEl.textContent = 'Press Enter again to reshuffle specs';
+      }, 260);
+    }
+
+    searchBtn.addEventListener('click', handleSearch);
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSearch();
+      }
+    });
+
+    quickPills.forEach((pill) => {
+      pill.addEventListener('click', () => {
+        const car = pill.getAttribute('data-car');
+        input.value = car;
+        input.focus();
+        handleSearch();
+      });
+    });
+  </script>
+</body>
+</html>
